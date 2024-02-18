@@ -58,14 +58,6 @@ class _MyHomeState extends State<MyHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: ValueListenableBuilder<String>(
-          valueListenable: fenNotifier,
-          builder: (context, fen, _) {
-            return Text('Chess position: $fen');
-          },
-        ),
-      ),
       body: SafeArea(
         child: Column(
           children: <Widget>[
