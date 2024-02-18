@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -19,7 +18,7 @@ class MainApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.yellow,
+          seedColor: Colors.red,
         ),
       ),
       home: const MyHome(),
@@ -40,6 +39,8 @@ class _MyHomeState extends State<MyHome> {
   ChessPositionDetection? chessPositionDetection;
   late String fen;
   late ValueNotifier<String> fenNotifier;
+
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -63,36 +64,39 @@ class _MyHomeState extends State<MyHome> {
           children: <Widget>[
             Expanded(
               child: Center(
-                child: ValueListenableBuilder<String>(
-                  valueListenable: fenNotifier,
-                  builder: (context, fen, _) {
-                    return EditableChessBoard(
-                      key: UniqueKey(),
-                      boardSize: 400.0,
-                      controller: PositionController('$fen b KQkq - 0 1'),
-                      labels: Labels(
-                        playerTurnLabel: 'Player turn :',
-                        whitePlayerLabel: 'White',
-                        blackPlayerLabel: 'Black',
-                        availableCastlesLabel: 'Available castles :',
-                        whiteOOLabel: 'White O-O',
-                        whiteOOOLabel: 'White O-O-O',
-                        blackOOLabel: 'Black O-O',
-                        blackOOOLabel: 'Black O-O-O',
-                        enPassantLabel: 'En passant square :',
-                        drawHalfMovesCountLabel: 'Draw half moves count : ',
-                        moveNumberLabel: 'Move number : ',
-                        submitFieldLabel: 'Validate field',
-                        currentPositionLabel: 'Current position: ',
-                        copyFenLabel: 'Copy position',
-                        pasteFenLabel: 'Paste position',
-                        resetPosition: 'Reset position',
-                        standardPosition: 'Standard position',
-                        erasePosition: 'Erase position',
+                child: isLoading
+                    ? const CircularProgressIndicator(color: Colors.red)
+                    : ValueListenableBuilder<String>(
+                        valueListenable: fenNotifier,
+                        builder: (context, fen, _) {
+                          return EditableChessBoard(
+                            key: UniqueKey(),
+                            boardSize: 400.0,
+                            controller: PositionController('$fen b KQkq - 0 1'),
+                            labels: Labels(
+                              playerTurnLabel: 'Player turn:',
+                              whitePlayerLabel: 'White',
+                              blackPlayerLabel: 'Black',
+                              availableCastlesLabel: 'Available castles:',
+                              whiteOOLabel: 'White O-O',
+                              whiteOOOLabel: 'White O-O-O',
+                              blackOOLabel: 'Black O-O',
+                              blackOOOLabel: 'Black O-O-O',
+                              enPassantLabel: 'En passant square:',
+                              drawHalfMovesCountLabel:
+                                  'Draw half moves count: ',
+                              moveNumberLabel: 'Move number: ',
+                              submitFieldLabel: 'Validate field',
+                              currentPositionLabel: 'Current position: ',
+                              copyFenLabel: 'Copy position',
+                              pasteFenLabel: 'Paste position',
+                              resetPosition: 'Reset position',
+                              standardPosition: 'Standard position',
+                              erasePosition: 'Erase position',
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ),
             SizedBox(
@@ -102,15 +106,7 @@ class _MyHomeState extends State<MyHome> {
                   if (Platform.isAndroid || Platform.isIOS)
                     IconButton(
                       onPressed: () async {
-                        final result = await imagePicker.pickImage(
-                          source: ImageSource.camera,
-                        );
-                        if (result != null) {
-                          fen = await chessPositionDetection!
-                              .analyseImage(result.path);
-                          fenNotifier.value = fen;
-                          log(fen);
-                        }
+                        await loadChessPosition(ImageSource.camera);
                       },
                       icon: const Icon(
                         Icons.camera,
@@ -119,15 +115,7 @@ class _MyHomeState extends State<MyHome> {
                     ),
                   IconButton(
                     onPressed: () async {
-                      final result = await imagePicker.pickImage(
-                        source: ImageSource.gallery,
-                      );
-                      if (result != null) {
-                        fen = await chessPositionDetection!
-                            .analyseImage(result.path);
-                        fenNotifier.value = fen;
-                        log(fen);
-                      }
+                      await loadChessPosition(ImageSource.gallery);
                     },
                     icon: const Icon(
                       Icons.photo,
@@ -141,5 +129,22 @@ class _MyHomeState extends State<MyHome> {
         ),
       ),
     );
+  }
+
+  Future<void> loadChessPosition(ImageSource source) async {
+    final result = await imagePicker.pickImage(source: source);
+
+    if (result != null) {
+      setState(() {
+        isLoading = true;
+      });
+
+      fen = await chessPositionDetection!.analyseImage(result.path);
+      fenNotifier.value = fen;
+
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 }
