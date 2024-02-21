@@ -18,7 +18,7 @@ class MainApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.red,
+          seedColor: Colors.purple,
         ),
       ),
       home: const MyHome(),
@@ -65,7 +65,7 @@ class _MyHomeState extends State<MyHome> {
             Expanded(
               child: Center(
                 child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.red)
+                    ? const CircularProgressIndicator(color: Colors.purple)
                     : ValueListenableBuilder<String>(
                         valueListenable: fenNotifier,
                         builder: (context, fen, _) {

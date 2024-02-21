@@ -1,3 +1,3 @@
-# chess_snapshot_app
+# ChessSnapshot
 
-A new Flutter project.
+App for detecting chess positions from a photo of a real board.
