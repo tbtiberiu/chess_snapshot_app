@@ -13,12 +13,13 @@ dependencies:
   image: ^4.1.7
   image_picker: ^1.0.7
   http: ^1.2.0
-  editable_chess_board: ^0.1.8
+  chess_snapshot_chessboard:
+    path: package/chess_snapshot_chessboard
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^3.0.1
 
 flutter:
   uses-material-design: true

@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:editable_chess_board/editable_chess_board.dart';
 import 'package:chess_snapshot_app/chess_position_detection.dart';
+import 'package:chess_snapshot_chessboard/chess_snapshot_chessboard.dart';
 
 void main() {
   runApp(const MainApp());
@@ -72,28 +72,7 @@ class _MyHomeState extends State<MyHome> {
                           return EditableChessBoard(
                             key: UniqueKey(),
                             boardSize: 400.0,
-                            controller: PositionController('$fen b KQkq - 0 1'),
-                            labels: Labels(
-                              playerTurnLabel: 'Player turn:',
-                              whitePlayerLabel: 'White',
-                              blackPlayerLabel: 'Black',
-                              availableCastlesLabel: 'Available castles:',
-                              whiteOOLabel: 'White O-O',
-                              whiteOOOLabel: 'White O-O-O',
-                              blackOOLabel: 'Black O-O',
-                              blackOOOLabel: 'Black O-O-O',
-                              enPassantLabel: 'En passant square:',
-                              drawHalfMovesCountLabel:
-                                  'Draw half moves count: ',
-                              moveNumberLabel: 'Move number: ',
-                              submitFieldLabel: 'Validate field',
-                              currentPositionLabel: 'Current position: ',
-                              copyFenLabel: 'Copy position',
-                              pasteFenLabel: 'Paste position',
-                              resetPosition: 'Reset position',
-                              standardPosition: 'Standard position',
-                              erasePosition: 'Erase position',
-                            ),
+                            fen: '$fen b KQkq - 0 1',
                           );
                         },
                       ),
