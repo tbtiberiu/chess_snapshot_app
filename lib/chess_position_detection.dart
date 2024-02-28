@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:image/image.dart';
 
 class ChessPositionDetection {
+  final String baseUrl = 'http://192.168.82.107:8080';
+
   Future<String> analyseImage(String imagePath) async {
     final File imageFile = File(imagePath);
 
@@ -23,7 +25,7 @@ class ChessPositionDetection {
     final Uint8List resizedImageBytes = encodePng(resizedImage);
 
     var request = http.MultipartRequest(
-        'POST', Uri.parse('http://192.168.82.107:8080/api/get_chess_position'));
+        'POST', Uri.parse('$baseUrl/api/get_chess_position'));
     request.files.add(http.MultipartFile.fromBytes('image', resizedImageBytes,
         filename: 'snapshot.png'));
 
