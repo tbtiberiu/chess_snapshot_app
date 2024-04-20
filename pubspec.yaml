@@ -9,10 +9,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.6
   image: ^4.1.7
   image_picker: ^1.0.7
   http: ^1.2.0
+  chess: ^0.8.1
+  simple_chess_board: ^1.3.0
+  persistent_bottom_nav_bar_v2: ^5.1.0
+  font_awesome_flutter: ^10.7.0
   chess_snapshot_chessboard:
     path: package/chess_snapshot_chessboard
 
