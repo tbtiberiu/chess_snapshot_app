@@ -1,10 +1,12 @@
 import 'dart:io';
 
+import 'package:chess_snapshot_app/providers/fen_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:chess_snapshot_app/chess_position_detection.dart';
 import 'package:chess_snapshot_chessboard/chess_snapshot_chessboard.dart';
+import 'package:provider/provider.dart';
 
 class DetectScreen extends StatelessWidget {
   const DetectScreen({super.key});
@@ -43,7 +45,7 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
   void initState() {
     super.initState();
     chessPositionDetection = ChessPositionDetection();
-    fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+    fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b - - 0 1';
     fenNotifier = ValueNotifier<String>(fen);
   }
 
@@ -69,7 +71,7 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
                           return EditableChessBoard(
                             key: UniqueKey(),
                             boardSize: 400.0,
-                            fen: '$fen b KQkq - 0 1',
+                            fen: fen,
                           );
                         },
                       ),
@@ -104,6 +106,12 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
                         size: 36,
                       ),
                     ),
+                    IconButton(
+                      onPressed: () async {
+                        await rotateRightBoard(fen);
+                      },
+                      icon: const FaIcon(FontAwesomeIcons.rotateRight),
+                    ),
                   ],
                 ),
               ),
@@ -122,12 +130,49 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
         isLoading = true;
       });
 
-      fen = await chessPositionDetection!.analyseImage(result.path);
+      String partialFen =
+          await chessPositionDetection!.analyseImage(result.path);
+      fen = '$partialFen b - - 0 1';
       fenNotifier.value = fen;
+      updateFenInProvider(fen);
 
       setState(() {
         isLoading = false;
       });
     }
+  }
+
+  void updateFenInProvider(String newFen) {
+    final provider = Provider.of<FenProvider>(context, listen: false);
+    provider.changeFen(newFen);
+  }
+
+  Future<void> rotateRightBoard(String fen) async {
+    fen = rotateFen(fen);
+    fenNotifier.value = fen;
+    updateFenInProvider(fen);
+  }
+
+  String rotateFen(String fen) {
+    List<String> parts = fen.split(' ');
+    String boardState = parts[0];
+    List<String> rows = boardState.split('/');
+
+    List<List<String>> rotatedBoard = [];
+    for (int col = 0; col < 8; col++) {
+      List<String> newRow = [];
+      for (int row = 7; row >= 0; row--) {
+        newRow.add(rows[row][col]);
+      }
+      rotatedBoard.add(newRow);
+    }
+
+    String rotatedBoardState =
+        rotatedBoard.map((row) => row.join('')).join('/');
+
+    String rotatedFEN =
+        '$rotatedBoardState ${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]} ${parts[5]}';
+
+    return rotatedFEN;
   }
 }

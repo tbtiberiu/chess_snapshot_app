@@ -1,4 +1,6 @@
+import 'package:chess_snapshot_app/providers/fen_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:simple_chess_board/models/board_arrow.dart';
 import 'package:chess/chess.dart' as chesslib;
 import 'package:simple_chess_board/simple_chess_board.dart';
@@ -28,13 +30,16 @@ class MyPlayScreen extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyPlayScreen> {
-  final _chess = chesslib.Chess.fromFEN(chesslib.Chess.DEFAULT_POSITION);
+  late String _fen;
+  late chesslib.Chess _chess;
   var _blackAtBottom = false;
   BoardArrow? _lastMoveArrowCoordinates;
   late ChessBoardColors _boardColors;
 
   @override
   void initState() {
+    _fen = chesslib.Chess.DEFAULT_POSITION;
+    _chess = chesslib.Chess.fromFEN(_fen);
     _boardColors = ChessBoardColors()
       ..lightSquaresColor = Colors.blue.shade200
       ..darkSquaresColor = Colors.blue.shade600
@@ -95,6 +100,10 @@ class _MyHomePageState extends State<MyPlayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final fenProvider = Provider.of<FenProvider>(context);
+    _fen = fenProvider.fen;
+    _chess = chesslib.Chess.fromFEN(_fen);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
