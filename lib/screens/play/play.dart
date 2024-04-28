@@ -1,5 +1,6 @@
 import 'package:chess_snapshot_app/providers/fen_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_chess_board/models/board_arrow.dart';
 import 'package:chess/chess.dart' as chesslib;
@@ -32,6 +33,7 @@ class MyPlayScreen extends StatefulWidget {
 class _MyHomePageState extends State<MyPlayScreen> {
   late String _fen;
   late chesslib.Chess _chess;
+  late ValueNotifier<chesslib.Chess> _chessNotifier;
   var _blackAtBottom = false;
   BoardArrow? _lastMoveArrowCoordinates;
   late ChessBoardColors _boardColors;
@@ -40,6 +42,7 @@ class _MyHomePageState extends State<MyPlayScreen> {
   void initState() {
     _fen = chesslib.Chess.DEFAULT_POSITION;
     _chess = chesslib.Chess.fromFEN(_fen);
+    _chessNotifier = ValueNotifier<chesslib.Chess>(_chess);
     _boardColors = ChessBoardColors()
       ..lightSquaresColor = Colors.blue.shade200
       ..darkSquaresColor = Colors.blue.shade600
@@ -50,6 +53,12 @@ class _MyHomePageState extends State<MyPlayScreen> {
       ..circularProgressBarColor = Colors.red
       ..coordinatesColor = Colors.green;
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _chessNotifier.dispose();
+    super.dispose();
   }
 
   void tryMakingMove({required ShortMove move}) {
@@ -100,43 +109,83 @@ class _MyHomePageState extends State<MyPlayScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final fenProvider = Provider.of<FenProvider>(context);
-    _fen = fenProvider.fen;
-    _chess = chesslib.Chess.fromFEN(_fen);
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _blackAtBottom = !_blackAtBottom;
-              });
-            },
-            icon: const Icon(Icons.swap_vert),
-          )
-        ],
-      ),
-      body: Center(
-        child: SimpleChessBoard(
-            chessBoardColors: _boardColors,
-            engineThinking: false,
-            fen: _chess.fen,
-            onMove: tryMakingMove,
-            blackSideAtBottom: _blackAtBottom,
-            whitePlayerType: PlayerType.human,
-            blackPlayerType: PlayerType.human,
-            lastMoveToHighlight: _lastMoveArrowCoordinates,
-            onPromote: () => handlePromotion(context),
-            onPromotionCommited: ({
-              required ShortMove moveDone,
-              required PieceType pieceType,
-            }) {
-              moveDone.promotion = pieceType;
-              tryMakingMove(move: moveDone);
-            }),
+      body: SafeArea(
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Center(
+                  child: ValueListenableBuilder<chesslib.Chess>(
+                    valueListenable: _chessNotifier,
+                    builder: (context, chess, _) {
+                      return SimpleChessBoard(
+                          chessBoardColors: _boardColors,
+                          engineThinking: false,
+                          fen: chess.fen,
+                          onMove: tryMakingMove,
+                          blackSideAtBottom: _blackAtBottom,
+                          whitePlayerType: PlayerType.human,
+                          blackPlayerType: PlayerType.human,
+                          lastMoveToHighlight: _lastMoveArrowCoordinates,
+                          onPromote: () => handlePromotion(context),
+                          onPromotionCommited: ({
+                            required ShortMove moveDone,
+                            required PieceType pieceType,
+                          }) {
+                            moveDone.promotion = pieceType;
+                            tryMakingMove(move: moveDone);
+                          });
+                    },
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              child: Container(
+                padding: const EdgeInsets.all(3.0),
+                decoration: const BoxDecoration(
+                  border: Border(
+                      top: BorderSide(width: 1), bottom: BorderSide(width: 1)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _blackAtBottom = !_blackAtBottom;
+                        });
+                      },
+                      icon: const FaIcon(
+                        FontAwesomeIcons.rotate,
+                        size: 36,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        updateBoard(context);
+                      },
+                      icon: const FaIcon(
+                        FontAwesomeIcons.upload,
+                        size: 36,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  void updateBoard(BuildContext context) {
+    final fenProvider = Provider.of<FenProvider>(context, listen: false);
+    _fen = fenProvider.fen;
+    _chess = chesslib.Chess.fromFEN(_fen);
+    _chessNotifier.value = _chess;
   }
 }

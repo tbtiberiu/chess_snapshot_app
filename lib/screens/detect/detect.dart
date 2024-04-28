@@ -36,8 +36,8 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
   final imagePicker = ImagePicker();
 
   ChessPositionDetection? chessPositionDetection;
-  late String fen;
-  late ValueNotifier<String> fenNotifier;
+  late String _fen;
+  late ValueNotifier<String> _fenNotifier;
 
   bool isLoading = false;
 
@@ -45,13 +45,13 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
   void initState() {
     super.initState();
     chessPositionDetection = ChessPositionDetection();
-    fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b - - 0 1';
-    fenNotifier = ValueNotifier<String>(fen);
+    _fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1';
+    _fenNotifier = ValueNotifier<String>(_fen);
   }
 
   @override
   void dispose() {
-    fenNotifier.dispose();
+    _fenNotifier.dispose();
     super.dispose();
   }
 
@@ -66,7 +66,7 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
                 child: isLoading
                     ? const CircularProgressIndicator(color: Colors.purple)
                     : ValueListenableBuilder<String>(
-                        valueListenable: fenNotifier,
+                        valueListenable: _fenNotifier,
                         builder: (context, fen, _) {
                           return EditableChessBoard(
                             key: UniqueKey(),
@@ -107,10 +107,13 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
                       ),
                     ),
                     IconButton(
-                      onPressed: () async {
-                        await rotateRightBoard(fen);
+                      onPressed: () {
+                        rotateRightBoard(_fen);
                       },
-                      icon: const FaIcon(FontAwesomeIcons.rotateRight),
+                      icon: const FaIcon(
+                        FontAwesomeIcons.rotateRight,
+                        size: 36,
+                      ),
                     ),
                   ],
                 ),
@@ -132,9 +135,9 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
 
       String partialFen =
           await chessPositionDetection!.analyseImage(result.path);
-      fen = '$partialFen b - - 0 1';
-      fenNotifier.value = fen;
-      updateFenInProvider(fen);
+      _fen = '$partialFen w - - 0 1';
+      _fenNotifier.value = _fen;
+      updateFenInProvider(_fen);
 
       setState(() {
         isLoading = false;
@@ -147,32 +150,85 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
     provider.changeFen(newFen);
   }
 
-  Future<void> rotateRightBoard(String fen) async {
-    fen = rotateFen(fen);
-    fenNotifier.value = fen;
-    updateFenInProvider(fen);
+  void rotateRightBoard(String oldFen) {
+    _fen = rotateFen(oldFen);
+    _fenNotifier.value = _fen;
+    updateFenInProvider(_fen);
   }
 
   String rotateFen(String fen) {
     List<String> parts = fen.split(' ');
-    String boardState = parts[0];
-    List<String> rows = boardState.split('/');
+    String fenState = parts[0];
+    List<List<String>> matrixBoardState = fenStateToMatrix(fenState);
+    List<List<String>> rotatedBoardState = rotateRightMatrix(matrixBoardState);
+    String rotatedFenState = matrixToFenState(rotatedBoardState);
 
-    List<List<String>> rotatedBoard = [];
-    for (int col = 0; col < 8; col++) {
+    String rotatedFen =
+        '$rotatedFenState ${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]} ${parts[5]}';
+
+    return rotatedFen;
+  }
+
+  List<List<String>> fenStateToMatrix(String fenState) {
+    List<String> rows = fenState.split('/');
+    List<List<String>> matrix = [];
+
+    for (final String row in rows) {
       List<String> newRow = [];
-      for (int row = 7; row >= 0; row--) {
-        newRow.add(rows[row][col]);
+      for (int i = 0; i < row.length; i++) {
+        String char = row[i];
+        if (int.tryParse(char) != null) {
+          int emptySpaces = int.parse(char);
+          for (int j = 0; j < emptySpaces; j++) {
+            newRow.add("-");
+          }
+        } else {
+          newRow.add(char);
+        }
       }
-      rotatedBoard.add(newRow);
+      matrix.add(newRow);
     }
 
-    String rotatedBoardState =
-        rotatedBoard.map((row) => row.join('')).join('/');
+    return matrix;
+  }
 
-    String rotatedFEN =
-        '$rotatedBoardState ${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]} ${parts[5]}';
+  String matrixToFenState(List<List<String>> matrix) {
+    String fenState = '';
 
-    return rotatedFEN;
+    for (List<String> row in matrix) {
+      int emptyCount = 0;
+      for (String square in row) {
+        if (square == '-') {
+          emptyCount++;
+        } else {
+          if (emptyCount > 0) {
+            fenState += emptyCount.toString();
+            emptyCount = 0;
+          }
+          fenState += square;
+        }
+      }
+      if (emptyCount > 0) {
+        fenState += emptyCount.toString();
+      }
+      fenState += '/';
+    }
+
+    fenState = fenState.substring(0, fenState.length - 1);
+    return fenState;
+  }
+
+  List<List<String>> rotateRightMatrix(List<List<String>> matrix) {
+    int n = matrix.length;
+    List<List<String>> rotatedMatrix =
+        List.generate(n, (index) => List.filled(n, ''));
+
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        rotatedMatrix[i][j] = matrix[n - 1 - j][i];
+      }
+    }
+
+    return rotatedMatrix;
   }
 }

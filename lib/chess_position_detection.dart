@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:image/image.dart';
 
 class ChessPositionDetection {
-  final String baseUrl = 'http://192.168.80.81:8080';
+  final String baseUrl = 'http://192.168.102.31:8080';
 
   Future<String> analyseImage(String imagePath) async {
     final File imageFile = File(imagePath);
