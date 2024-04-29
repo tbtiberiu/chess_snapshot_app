@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_chess_board/models/board_arrow.dart';
 import 'package:chess/chess.dart' as chesslib;
+import 'package:chess_snapshot_app/chess_position_detection.dart';
 import 'package:simple_chess_board/simple_chess_board.dart';
 
 class PlayScreen extends StatelessWidget {
@@ -32,6 +33,7 @@ class MyPlayScreen extends StatefulWidget {
 
 class _MyHomePageState extends State<MyPlayScreen> {
   late String _fen;
+  ChessPositionDetection? chessPositionDetection;
   late chesslib.Chess _chess;
   late ValueNotifier<chesslib.Chess> _chessNotifier;
   var _blackAtBottom = false;
@@ -40,6 +42,8 @@ class _MyHomePageState extends State<MyPlayScreen> {
 
   @override
   void initState() {
+    super.initState();
+    chessPositionDetection = ChessPositionDetection();
     _fen = chesslib.Chess.DEFAULT_POSITION;
     _chess = chesslib.Chess.fromFEN(_fen);
     _chessNotifier = ValueNotifier<chesslib.Chess>(_chess);
@@ -52,7 +56,7 @@ class _MyHomePageState extends State<MyPlayScreen> {
       ..endSquareColor = Colors.green
       ..circularProgressBarColor = Colors.red
       ..coordinatesColor = Colors.green;
-    super.initState();
+    setBestMove();
   }
 
   @override
@@ -68,10 +72,17 @@ class _MyHomePageState extends State<MyPlayScreen> {
       'promotion': move.promotion?.name,
     });
     if (success) {
-      setState(() {
-        _lastMoveArrowCoordinates = BoardArrow(from: move.from, to: move.to);
-      });
+      setBestMove();
     }
+  }
+
+  Future<void> setBestMove() async {
+    String bestMove = await chessPositionDetection!.getBestMove(_chess.fen);
+    String from = bestMove.substring(0, 2);
+    String to = bestMove.substring(2);
+    setState(() {
+      _lastMoveArrowCoordinates = BoardArrow(from: from, to: to);
+    });
   }
 
   Future<PieceType?> handlePromotion(BuildContext context) {

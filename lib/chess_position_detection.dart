@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:image/image.dart';
 
 class ChessPositionDetection {
-  final String baseUrl = 'http://192.168.102.31:8080';
+  final String baseUrl = 'http://192.168.0.32:8080';
 
   Future<String> analyseImage(String imagePath) async {
     final File imageFile = File(imagePath);
@@ -37,6 +37,23 @@ class ChessPositionDetection {
       return fenValue;
     } else {
       throw Exception('Failed to upload image');
+    }
+  }
+
+  Future<String> getBestMove(String fen) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/get_best_move'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode({'fen': fen}),
+    );
+
+    if (response.statusCode == 200) {
+      var jsonMap = jsonDecode(response.body);
+      return jsonMap['best_move']; // TO DO: Fix for checkmate
+    } else {
+      throw Exception('Failed to load best move');
     }
   }
 
