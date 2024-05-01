@@ -10,7 +10,6 @@ import 'piece.dart';
 import 'advanced_options.dart';
 import 'utils.dart';
 
-/// Texts used for the labels.
 class Labels {
   /// Text used for player turn label.
   final String playerTurnLabel = 'Player turn:';
@@ -47,11 +46,14 @@ class EditableChessBoard extends StatefulWidget {
 
   final String fen;
 
+  final void Function(String newFen) onFenChanged;
+
   /// Constructor.
   const EditableChessBoard({
     Key? key,
     required this.boardSize,
     required this.fen,
+    required this.onFenChanged,
   }) : super(key: key);
 
   @override
@@ -60,6 +62,7 @@ class EditableChessBoard extends StatefulWidget {
 
 class _EditableChessBoardState extends State<EditableChessBoard> {
   late String _fen;
+  late void Function() _onFenChanged;
   Piece? _editingPieceType;
 
   @override
@@ -112,6 +115,7 @@ class _EditableChessBoardState extends State<EditableChessBoard> {
 
     setState(() {
       _fen = newFen;
+      widget.onFenChanged(_fen);
     });
   }
 
@@ -134,6 +138,7 @@ class _EditableChessBoardState extends State<EditableChessBoard> {
 
     setState(() {
       _fen = parts.join(' ');
+      widget.onFenChanged(_fen);
     });
   }
 
@@ -141,6 +146,7 @@ class _EditableChessBoardState extends State<EditableChessBoard> {
     if (chess.Chess.validate_fen(position)['valid']) {
       setState(() {
         _fen = position;
+        widget.onFenChanged(_fen);
       });
     }
   }

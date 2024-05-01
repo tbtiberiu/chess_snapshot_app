@@ -40,7 +40,7 @@ class ChessPositionDetection {
     }
   }
 
-  Future<String> getBestMove(String fen) async {
+  Future<String?> getBestMove(String fen) async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/get_best_move'),
       headers: <String, String>{

@@ -72,6 +72,9 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
                             key: UniqueKey(),
                             boardSize: 400.0,
                             fen: fen,
+                            onFenChanged: (String newFen) {
+                              updateFenInProvider(newFen);
+                            },
                           );
                         },
                       ),

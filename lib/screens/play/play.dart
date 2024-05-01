@@ -32,20 +32,18 @@ class MyPlayScreen extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyPlayScreen> {
-  late String _fen;
   ChessPositionDetection? chessPositionDetection;
   late chesslib.Chess _chess;
   late ValueNotifier<chesslib.Chess> _chessNotifier;
   var _blackAtBottom = false;
-  BoardArrow? _lastMoveArrowCoordinates;
+  BoardArrow? _bestMoveArrowCoordinates;
   late ChessBoardColors _boardColors;
 
   @override
   void initState() {
     super.initState();
     chessPositionDetection = ChessPositionDetection();
-    _fen = chesslib.Chess.DEFAULT_POSITION;
-    _chess = chesslib.Chess.fromFEN(_fen);
+    _chess = chesslib.Chess.fromFEN(chesslib.Chess.DEFAULT_POSITION);
     _chessNotifier = ValueNotifier<chesslib.Chess>(_chess);
     _boardColors = ChessBoardColors()
       ..lightSquaresColor = Colors.blue.shade200
@@ -56,66 +54,13 @@ class _MyHomePageState extends State<MyPlayScreen> {
       ..endSquareColor = Colors.green
       ..circularProgressBarColor = Colors.red
       ..coordinatesColor = Colors.green;
-    setBestMove();
+    updateBestMove();
   }
 
   @override
   void dispose() {
     _chessNotifier.dispose();
     super.dispose();
-  }
-
-  void tryMakingMove({required ShortMove move}) {
-    final success = _chess.move(<String, String?>{
-      'from': move.from,
-      'to': move.to,
-      'promotion': move.promotion?.name,
-    });
-    if (success) {
-      setBestMove();
-    }
-  }
-
-  Future<void> setBestMove() async {
-    String bestMove = await chessPositionDetection!.getBestMove(_chess.fen);
-    String from = bestMove.substring(0, 2);
-    String to = bestMove.substring(2);
-    setState(() {
-      _lastMoveArrowCoordinates = BoardArrow(from: from, to: to);
-    });
-  }
-
-  Future<PieceType?> handlePromotion(BuildContext context) {
-    final navigator = Navigator.of(context);
-    return showDialog<PieceType>(
-      context: context,
-      builder: (_) {
-        return AlertDialog(
-          title: const Text('Promotion'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: const Text("Queen"),
-                onTap: () => navigator.pop(PieceType.queen),
-              ),
-              ListTile(
-                title: const Text("Rook"),
-                onTap: () => navigator.pop(PieceType.rook),
-              ),
-              ListTile(
-                title: const Text("Bishop"),
-                onTap: () => navigator.pop(PieceType.bishop),
-              ),
-              ListTile(
-                title: const Text("Knight"),
-                onTap: () => navigator.pop(PieceType.knight),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   @override
@@ -139,7 +84,7 @@ class _MyHomePageState extends State<MyPlayScreen> {
                           blackSideAtBottom: _blackAtBottom,
                           whitePlayerType: PlayerType.human,
                           blackPlayerType: PlayerType.human,
-                          lastMoveToHighlight: _lastMoveArrowCoordinates,
+                          lastMoveToHighlight: _bestMoveArrowCoordinates,
                           onPromote: () => handlePromotion(context),
                           onPromotionCommited: ({
                             required ShortMove moveDone,
@@ -193,10 +138,94 @@ class _MyHomePageState extends State<MyPlayScreen> {
     );
   }
 
+  void tryMakingMove({required ShortMove move}) {
+    final success = _chess.move(<String, String?>{
+      'from': move.from,
+      'to': move.to,
+      'promotion': move.promotion?.name,
+    });
+    if (success) {
+      updateBestMove();
+    }
+  }
+
+  Future<void> updateBestMove() async {
+    BoardArrow? bestMoveArrow;
+    String? bestMove = await chessPositionDetection!.getBestMove(_chess.fen);
+    if (bestMove != null) {
+      String from = bestMove.substring(0, 2);
+      String to = bestMove.substring(2);
+      bestMoveArrow = BoardArrow(from: from, to: to);
+    }
+    setState(() {
+      _bestMoveArrowCoordinates = bestMoveArrow;
+    });
+  }
+
+  Future<PieceType?> handlePromotion(BuildContext context) async {
+    final PieceType? result = await showDialog<PieceType>(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          title: const Text('Choose a piece'),
+          children: <Widget>[
+            SimpleDialogOption(
+              child: const Text('Queen'),
+              onPressed: () {
+                Navigator.of(context).pop(PieceType.queen);
+              },
+            ),
+            SimpleDialogOption(
+              child: const Text('Rook'),
+              onPressed: () {
+                Navigator.of(context).pop(PieceType.rook);
+              },
+            ),
+            SimpleDialogOption(
+              child: const Text('Bishop'),
+              onPressed: () {
+                Navigator.of(context).pop(PieceType.bishop);
+              },
+            ),
+            SimpleDialogOption(
+              child: const Text('Knight'),
+              onPressed: () {
+                Navigator.of(context).pop(PieceType.knight);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    return result;
+  }
+
   void updateBoard(BuildContext context) {
     final fenProvider = Provider.of<FenProvider>(context, listen: false);
-    _fen = fenProvider.fen;
-    _chess = chesslib.Chess.fromFEN(_fen);
-    _chessNotifier.value = _chess;
+    if (chesslib.Chess.validate_fen(fenProvider.fen)['valid']) {
+      _chess = chesslib.Chess.fromFEN(fenProvider.fen);
+      _chessNotifier.value = _chess;
+      updateBestMove();
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Invalid FEN'),
+            content: const Text(
+                'The provided FEN is invalid. Please check and try again.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 }
