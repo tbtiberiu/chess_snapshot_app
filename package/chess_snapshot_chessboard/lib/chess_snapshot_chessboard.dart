@@ -62,7 +62,6 @@ class EditableChessBoard extends StatefulWidget {
 
 class _EditableChessBoardState extends State<EditableChessBoard> {
   late String _fen;
-  late void Function() _onFenChanged;
   Piece? _editingPieceType;
 
   @override
