@@ -33,24 +33,22 @@ class MyPlayScreen extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyPlayScreen> {
-  ChessPositionDetection? chessPositionDetection;
-  late chesslib.Chess _chess;
-  late ValueNotifier<chesslib.Chess> _chessNotifier;
   BoardArrow? _bestMoveArrowCoordinates;
-  late ChessBoardColors _boardColors;
-  var _blackAtBottom = false;
+  bool _blackAtBottom = false;
   bool _playingAgainstBot = false;
   bool _showingBestMove = true;
   bool _playingAsWhite = true;
   PlayerType _whitePlayerType = PlayerType.human;
   PlayerType _blackPlayerType = PlayerType.human;
+  late ChessPositionDetection _chessPositionDetection;
+  late chesslib.Chess _chess;
+  late ChessBoardColors _boardColors;
 
   @override
   void initState() {
     super.initState();
-    chessPositionDetection = ChessPositionDetection();
+    _chessPositionDetection = ChessPositionDetection();
     _chess = chesslib.Chess.fromFEN(chesslib.Chess.DEFAULT_POSITION);
-    _chessNotifier = ValueNotifier<chesslib.Chess>(_chess);
     _boardColors = ChessBoardColors()
       ..lightSquaresColor = const Color.fromRGBO(240, 217, 181, 1)
       ..darkSquaresColor = const Color.fromRGBO(181, 136, 99, 1)
@@ -66,7 +64,6 @@ class _MyHomePageState extends State<MyPlayScreen> {
 
   @override
   void dispose() {
-    _chessNotifier.dispose();
     super.dispose();
   }
 
@@ -80,28 +77,23 @@ class _MyHomePageState extends State<MyPlayScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Center(
-                  child: ValueListenableBuilder<chesslib.Chess>(
-                    valueListenable: _chessNotifier,
-                    builder: (context, chess, _) {
-                      return SimpleChessBoard(
-                          chessBoardColors: _boardColors,
-                          engineThinking: false,
-                          fen: chess.fen,
-                          onMove: tryMakingMove,
-                          blackSideAtBottom: _blackAtBottom,
-                          whitePlayerType: _whitePlayerType,
-                          blackPlayerType: _blackPlayerType,
-                          lastMoveToHighlight: _bestMoveArrowCoordinates,
-                          onPromote: () => handlePromotion(context),
-                          onPromotionCommited: ({
-                            required ShortMove moveDone,
-                            required PieceType pieceType,
-                          }) {
-                            moveDone.promotion = pieceType;
-                            tryMakingMove(move: moveDone);
-                          });
-                    },
-                  ),
+                  child: SimpleChessBoard(
+                      chessBoardColors: _boardColors,
+                      engineThinking: false,
+                      fen: _chess.fen,
+                      onMove: tryMakingMove,
+                      blackSideAtBottom: _blackAtBottom,
+                      whitePlayerType: _whitePlayerType,
+                      blackPlayerType: _blackPlayerType,
+                      lastMoveToHighlight: _bestMoveArrowCoordinates,
+                      onPromote: () => handlePromotion(context),
+                      onPromotionCommited: ({
+                        required ShortMove moveDone,
+                        required PieceType pieceType,
+                      }) {
+                        moveDone.promotion = pieceType;
+                        tryMakingMove(move: moveDone);
+                      }),
                 ),
               ),
             ),
@@ -253,7 +245,7 @@ class _MyHomePageState extends State<MyPlayScreen> {
   Future<void> updateBestMove() async {
     if (!_playingAgainstBot && !_showingBestMove) return;
 
-    String? bestMove = await chessPositionDetection!.getBestMove(_chess.fen);
+    String? bestMove = await _chessPositionDetection.getBestMove(_chess.fen);
     if (bestMove != null) {
       String from = bestMove.substring(0, 2);
       String to = bestMove.substring(2);
@@ -321,7 +313,6 @@ class _MyHomePageState extends State<MyPlayScreen> {
     final fenProvider = Provider.of<FenProvider>(context, listen: false);
     if (chesslib.Chess.validate_fen(fenProvider.fen)['valid']) {
       _chess = chesslib.Chess.fromFEN(fenProvider.fen);
-      _chessNotifier.value = _chess;
       updateBestMove();
     } else {
       showDialog(

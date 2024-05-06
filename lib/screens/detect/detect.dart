@@ -35,23 +35,19 @@ class MyDetectScreen extends StatefulWidget {
 class _MyDetectScreenState extends State<MyDetectScreen> {
   final imagePicker = ImagePicker();
 
-  ChessPositionDetection? chessPositionDetection;
+  late ChessPositionDetection _chessPositionDetection;
   late String _fen;
-  late ValueNotifier<String> _fenNotifier;
-
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    chessPositionDetection = ChessPositionDetection();
+    _chessPositionDetection = ChessPositionDetection();
     _fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1';
-    _fenNotifier = ValueNotifier<String>(_fen);
   }
 
   @override
   void dispose() {
-    _fenNotifier.dispose();
     super.dispose();
   }
 
@@ -64,18 +60,13 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
             Expanded(
               child: Center(
                 child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.purple)
-                    : ValueListenableBuilder<String>(
-                        valueListenable: _fenNotifier,
-                        builder: (context, fen, _) {
-                          return EditableChessBoard(
-                            key: UniqueKey(),
-                            boardSize: 400.0,
-                            fen: fen,
-                            onFenChanged: (String newFen) {
-                              updateFenInProvider(newFen);
-                            },
-                          );
+                    ? const CircularProgressIndicator(color: Color(0xFF8476BA))
+                    : EditableChessBoard(
+                        key: UniqueKey(),
+                        boardSize: 400.0,
+                        fen: _fen,
+                        onFenChanged: (String newFen) {
+                          updateFenInProvider(newFen);
                         },
                       ),
               ),
@@ -137,9 +128,10 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
       });
 
       String partialFen =
-          await chessPositionDetection!.analyseImage(result.path);
-      _fen = '$partialFen w - - 0 1';
-      _fenNotifier.value = _fen;
+          await _chessPositionDetection.analyseImage(result.path);
+      setState(() {
+        _fen = '$partialFen w - - 0 1';
+      });
       updateFenInProvider(_fen);
 
       setState(() {
@@ -154,8 +146,9 @@ class _MyDetectScreenState extends State<MyDetectScreen> {
   }
 
   void rotateRightBoard(String oldFen) {
-    _fen = rotateFen(oldFen);
-    _fenNotifier.value = _fen;
+    setState(() {
+      _fen = rotateFen(oldFen);
+    });
     updateFenInProvider(_fen);
   }
 
