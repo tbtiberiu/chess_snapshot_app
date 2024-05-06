@@ -15,17 +15,18 @@ class PlayScreen extends StatelessWidget {
     return MaterialApp(
       title: 'Chess Snapshot App',
       theme: ThemeData(
-        primarySwatch: Colors.purple,
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF8476BA),
+        ),
       ),
-      home: const MyPlayScreen(title: 'Play Chess'),
+      home: const MyPlayScreen(),
     );
   }
 }
 
 class MyPlayScreen extends StatefulWidget {
-  const MyPlayScreen({super.key, required this.title});
-
-  final String title;
+  const MyPlayScreen({super.key});
 
   @override
   State<MyPlayScreen> createState() => _MyHomePageState();
@@ -35,9 +36,14 @@ class _MyHomePageState extends State<MyPlayScreen> {
   ChessPositionDetection? chessPositionDetection;
   late chesslib.Chess _chess;
   late ValueNotifier<chesslib.Chess> _chessNotifier;
-  var _blackAtBottom = false;
   BoardArrow? _bestMoveArrowCoordinates;
   late ChessBoardColors _boardColors;
+  var _blackAtBottom = false;
+  bool _playingAgainstBot = false;
+  bool _showingBestMove = true;
+  bool _playingAsWhite = true;
+  PlayerType _whitePlayerType = PlayerType.human;
+  PlayerType _blackPlayerType = PlayerType.human;
 
   @override
   void initState() {
@@ -46,14 +52,15 @@ class _MyHomePageState extends State<MyPlayScreen> {
     _chess = chesslib.Chess.fromFEN(chesslib.Chess.DEFAULT_POSITION);
     _chessNotifier = ValueNotifier<chesslib.Chess>(_chess);
     _boardColors = ChessBoardColors()
-      ..lightSquaresColor = Colors.blue.shade200
-      ..darkSquaresColor = Colors.blue.shade600
-      ..coordinatesZoneColor = Colors.redAccent.shade200
-      ..lastMoveArrowColor = Colors.cyan
-      ..startSquareColor = Colors.orange
-      ..endSquareColor = Colors.green
-      ..circularProgressBarColor = Colors.red
-      ..coordinatesColor = Colors.green;
+      ..lightSquaresColor = const Color.fromRGBO(240, 217, 181, 1)
+      ..darkSquaresColor = const Color.fromRGBO(181, 136, 99, 1)
+      ..coordinatesZoneColor = const Color.fromRGBO(154, 113, 79, 1)
+      ..lastMoveArrowColor = const Color(0xFFF0F1F0)
+      ..startSquareColor = const Color.fromRGBO(154, 113, 79, 1)
+      ..endSquareColor = const Color.fromRGBO(154, 113, 79, 1)
+      ..circularProgressBarColor = Colors.black
+      ..coordinatesColor = const Color(0xFFF0F1F0)
+      ..dndIndicatorColor = const Color.fromRGBO(240, 217, 181, 1);
     updateBestMove();
   }
 
@@ -82,8 +89,8 @@ class _MyHomePageState extends State<MyPlayScreen> {
                           fen: chess.fen,
                           onMove: tryMakingMove,
                           blackSideAtBottom: _blackAtBottom,
-                          whitePlayerType: PlayerType.human,
-                          blackPlayerType: PlayerType.human,
+                          whitePlayerType: _whitePlayerType,
+                          blackPlayerType: _blackPlayerType,
                           lastMoveToHighlight: _bestMoveArrowCoordinates,
                           onPromote: () => handlePromotion(context),
                           onPromotionCommited: ({
@@ -95,6 +102,88 @@ class _MyHomePageState extends State<MyPlayScreen> {
                           });
                     },
                   ),
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 500,
+              child: Container(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Play against a bot:',
+                        ),
+                        Switch(
+                          value: _playingAgainstBot,
+                          onChanged: (value) {
+                            setState(() {
+                              _playingAgainstBot = value;
+                              updatePlayerTypes();
+                              updateBestMove();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Show the best move:',
+                        ),
+                        Switch(
+                          value: _showingBestMove,
+                          onChanged: (value) {
+                            setState(() {
+                              _showingBestMove = value;
+                              updateBestMove();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Play as:',
+                        ),
+                        ListTile(
+                          title: const Text('White'),
+                          leading: Radio<bool>(
+                            groupValue: _playingAsWhite,
+                            value: true,
+                            onChanged: (value) {
+                              setState(() {
+                                _playingAsWhite = value ?? true;
+                                updatePlayerTypes();
+                                updateBestMove();
+                              });
+                            },
+                          ),
+                        ),
+                        ListTile(
+                          title: const Text('Black'),
+                          leading: Radio<bool>(
+                            groupValue: _playingAsWhite,
+                            value: false,
+                            onChanged: (value) {
+                              setState(() {
+                                _playingAsWhite = value ?? false;
+                                updatePlayerTypes();
+                                updateBestMove();
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -149,16 +238,43 @@ class _MyHomePageState extends State<MyPlayScreen> {
     }
   }
 
+  void updatePlayerTypes() {
+    if (_playingAgainstBot) {
+      _whitePlayerType =
+          _playingAsWhite ? PlayerType.human : PlayerType.computer;
+      _blackPlayerType =
+          _playingAsWhite ? PlayerType.computer : PlayerType.human;
+    } else {
+      _whitePlayerType = PlayerType.human;
+      _blackPlayerType = PlayerType.human;
+    }
+  }
+
   Future<void> updateBestMove() async {
-    BoardArrow? bestMoveArrow;
+    if (!_playingAgainstBot && !_showingBestMove) return;
+
     String? bestMove = await chessPositionDetection!.getBestMove(_chess.fen);
     if (bestMove != null) {
       String from = bestMove.substring(0, 2);
       String to = bestMove.substring(2);
-      bestMoveArrow = BoardArrow(from: from, to: to);
+
+      if (_playingAgainstBot) {
+        chesslib.Color playerColor =
+            (_playingAsWhite) ? chesslib.Chess.WHITE : chesslib.Chess.BLACK;
+
+        if (playerColor != _chess.turn) {
+          tryMakingMove(move: ShortMove(from: from, to: to));
+        }
+      }
+
+      updateBestMoveArrowCoordinates(from, to);
     }
+  }
+
+  void updateBestMoveArrowCoordinates(String from, String to) {
     setState(() {
-      _bestMoveArrowCoordinates = bestMoveArrow;
+      _bestMoveArrowCoordinates =
+          (_showingBestMove) ? BoardArrow(from: from, to: to) : null;
     });
   }
 

@@ -36,7 +36,7 @@ class ChessBoard extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             Container(
-              color: Colors.indigo.shade300,
+              color: const Color(0xFF8476BA),
               width: size,
               height: size,
               child: Stack(
@@ -164,7 +164,7 @@ Iterable<Widget> getFilesCoordinates({
   required bool top,
 }) {
   final commonTextStyle = TextStyle(
-    color: Colors.yellow.shade400,
+    color: const Color(0xFFF0F1F0),
     fontWeight: FontWeight.bold,
     fontSize: boardSize * 0.04,
   );
@@ -190,7 +190,7 @@ Iterable<Widget> getRanksCoordinates({
   required bool left,
 }) {
   final commonTextStyle = TextStyle(
-    color: Colors.yellow.shade400,
+    color: const Color(0xFFF0F1F0),
     fontWeight: FontWeight.bold,
     fontSize: boardSize * 0.04,
   );

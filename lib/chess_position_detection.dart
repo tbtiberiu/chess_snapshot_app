@@ -51,7 +51,7 @@ class ChessPositionDetection {
 
     if (response.statusCode == 200) {
       var jsonMap = jsonDecode(response.body);
-      return jsonMap['best_move']; // TO DO: Fix for checkmate
+      return jsonMap['best_move'];
     } else {
       throw Exception('Failed to load best move');
     }

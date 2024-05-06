@@ -116,15 +116,22 @@ class FenControlsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          children: [
-            Text(labels.currentPositionLabel),
-            Expanded(
-              child: TextField(
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(labels.currentPositionLabel),
+              TextField(
                 controller: _positionFenController,
+                enabled: false,
+                style: const TextStyle(
+                    color: Color(0xFF333333),
+                    fontSize: 12,
+                    overflow: TextOverflow.ellipsis),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),

@@ -17,7 +17,7 @@ class DetectScreen extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.purple,
+          seedColor: const Color(0xFF8476BA),
         ),
       ),
       home: const MyDetectScreen(),

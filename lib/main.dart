@@ -24,7 +24,7 @@ class MainApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.purple,
+            seedColor: const Color(0xFF8476BA),
           ),
         ),
         home: PersistentTabView(
@@ -34,7 +34,7 @@ class MainApp extends StatelessWidget {
               item: ItemConfig(
                 icon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
                 title: "Detect",
-                activeForegroundColor: Colors.purple,
+                activeForegroundColor: const Color(0xFF8476BA),
               ),
             ),
             PersistentTabConfig(
@@ -42,7 +42,7 @@ class MainApp extends StatelessWidget {
               item: ItemConfig(
                 icon: const FaIcon(FontAwesomeIcons.chessBoard),
                 title: "Play",
-                activeForegroundColor: Colors.purple,
+                activeForegroundColor: const Color(0xFF8476BA),
               ),
             ),
           ],
