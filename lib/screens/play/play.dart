@@ -146,7 +146,10 @@ class _MyHomePageState extends State<MyPlayScreen> {
                           'Play as:',
                         ),
                         ListTile(
-                          title: const Text('White'),
+                          title: const Text(
+                            'White',
+                            style: TextStyle(fontSize: 13),
+                          ),
                           leading: Radio<bool>(
                             groupValue: _playingAsWhite,
                             value: true,
@@ -160,7 +163,10 @@ class _MyHomePageState extends State<MyPlayScreen> {
                           ),
                         ),
                         ListTile(
-                          title: const Text('Black'),
+                          title: const Text(
+                            'Black',
+                            style: TextStyle(fontSize: 13),
+                          ),
                           leading: Radio<bool>(
                             groupValue: _playingAsWhite,
                             value: false,

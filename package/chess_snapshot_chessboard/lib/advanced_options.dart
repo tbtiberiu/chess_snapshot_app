@@ -71,7 +71,10 @@ class TurnWidget extends StatelessWidget {
           labels.playerTurnLabel,
         ),
         ListTile(
-          title: Text(labels.whitePlayerLabel),
+          title: Text(
+            labels.whitePlayerLabel,
+            style: const TextStyle(fontSize: 13),
+          ),
           leading: Radio<bool>(
             groupValue: isWhiteTurn,
             value: true,
@@ -81,7 +84,10 @@ class TurnWidget extends StatelessWidget {
           ),
         ),
         ListTile(
-          title: Text(labels.blackPlayerLabel),
+          title: Text(
+            labels.blackPlayerLabel,
+            style: const TextStyle(fontSize: 13),
+          ),
           leading: Radio<bool>(
             groupValue: isWhiteTurn,
             value: false,
@@ -100,17 +106,12 @@ class FenControlsWidget extends StatelessWidget {
   final String currentFen;
   final void Function(String) onPositionFenSubmitted;
 
-  final TextEditingController _positionFenController =
-      TextEditingController(text: '');
-
-  FenControlsWidget({
+  const FenControlsWidget({
     super.key,
     required this.labels,
     required this.currentFen,
     required this.onPositionFenSubmitted,
-  }) {
-    _positionFenController.text = currentFen;
-  }
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -121,14 +122,12 @@ class FenControlsWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(labels.currentPositionLabel),
-              TextField(
-                controller: _positionFenController,
-                enabled: false,
-                style: const TextStyle(
-                    color: Color(0xFF333333),
-                    fontSize: 12,
-                    overflow: TextOverflow.ellipsis),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(labels.currentPositionLabel),
+              ),
+              FittedBox(
+                child: Text(currentFen),
               ),
             ],
           ),
