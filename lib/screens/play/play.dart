@@ -6,6 +6,7 @@ import 'package:simple_chess_board/models/board_arrow.dart';
 import 'package:chess/chess.dart' as chesslib;
 import 'package:chess_snapshot_app/chess_position_detection.dart';
 import 'package:simple_chess_board/simple_chess_board.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PlayScreen extends StatelessWidget {
   const PlayScreen({super.key});
@@ -43,6 +44,7 @@ class _MyHomePageState extends State<MyPlayScreen> {
   late ChessPositionDetection _chessPositionDetection;
   late chesslib.Chess _chess;
   late ChessBoardColors _boardColors;
+  final String _baseAnalysisBoardUrl = 'https://lichess.org/analysis';
 
   @override
   void initState() {
@@ -215,6 +217,15 @@ class _MyHomePageState extends State<MyPlayScreen> {
                         size: 36,
                       ),
                     ),
+                    IconButton(
+                      onPressed: () {
+                        launchAnalysisBoard(_chess.fen);
+                      },
+                      icon: const FaIcon(
+                        FontAwesomeIcons.magnifyingGlass,
+                        size: 36,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -249,7 +260,12 @@ class _MyHomePageState extends State<MyPlayScreen> {
   }
 
   Future<void> updateBestMove() async {
-    if (!_playingAgainstBot && !_showingBestMove) return;
+    if (!_playingAgainstBot && !_showingBestMove) {
+      setState(() {
+        _bestMoveArrowCoordinates = null;
+      });
+      return;
+    }
 
     String? bestMove = await _chessPositionDetection.getBestMove(_chess.fen);
     if (bestMove != null) {
@@ -266,6 +282,10 @@ class _MyHomePageState extends State<MyPlayScreen> {
       }
 
       updateBestMoveArrowCoordinates(from, to);
+    } else {
+      setState(() {
+        _bestMoveArrowCoordinates = null;
+      });
     }
   }
 
@@ -313,6 +333,14 @@ class _MyHomePageState extends State<MyPlayScreen> {
     );
 
     return result;
+  }
+
+  Future<void> launchAnalysisBoard(String fen) async {
+    final Uri url = Uri.parse('$_baseAnalysisBoardUrl/$fen');
+
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    }
   }
 
   void updateBoard(BuildContext context) {
