@@ -50,11 +50,11 @@ class EditableChessBoard extends StatefulWidget {
 
   /// Constructor.
   const EditableChessBoard({
-    Key? key,
+    super.key,
     required this.boardSize,
     required this.fen,
     required this.onFenChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<EditableChessBoard> createState() => _EditableChessBoardState();

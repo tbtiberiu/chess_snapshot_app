@@ -125,7 +125,7 @@ class _ChessboardState extends State<_Chessboard> {
                     widget.onSquareClicked(file, rank);
                   },
                 );
-              }).toList(growable: false),
+              }),
             ]),
       ),
     );
@@ -136,8 +136,7 @@ class _PlayerTurn extends StatelessWidget {
   final double size;
   final bool whiteTurn;
 
-  const _PlayerTurn({Key? key, required this.size, required this.whiteTurn})
-      : super(key: key);
+  const _PlayerTurn({required this.size, required this.whiteTurn});
 
   @override
   Widget build(BuildContext context) {

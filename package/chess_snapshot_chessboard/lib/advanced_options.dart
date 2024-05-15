@@ -55,11 +55,11 @@ class TurnWidget extends StatelessWidget {
   final void Function(bool turn) onTurnChanged;
 
   const TurnWidget({
-    Key? key,
+    super.key,
     required this.labels,
     required this.currentFen,
     required this.onTurnChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

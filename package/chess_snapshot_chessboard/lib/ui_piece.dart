@@ -13,12 +13,12 @@ class UIPiece extends StatelessWidget {
   final double size;
 
   const UIPiece({
-    Key? key,
+    super.key,
     required this.squareName,
     required this.squareColor,
     required this.piece,
     required this.size,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

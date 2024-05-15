@@ -11,10 +11,10 @@ class UISquare extends StatelessWidget {
   final void Function() onSquareClicked;
 
   const UISquare({
-    Key? key,
+    super.key,
     required this.square,
     required this.onSquareClicked,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

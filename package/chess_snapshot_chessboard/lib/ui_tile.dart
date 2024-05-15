@@ -9,10 +9,10 @@ class UITile extends StatelessWidget {
   final double size;
 
   const UITile({
-    Key? key,
+    super.key,
     required this.color,
     required this.size,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
