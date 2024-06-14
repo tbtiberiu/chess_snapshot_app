@@ -11,44 +11,23 @@ import 'advanced_options.dart';
 import 'utils.dart';
 
 class Labels {
-  /// Text used for player turn label.
   final String playerTurnLabel = 'Player turn:';
-
-  /// Text used for white player label.
   final String whitePlayerLabel = 'White player';
-
-  /// Text used for black player label.
   final String blackPlayerLabel = 'Black player';
-
-  /// Text used for the current position label.
   final String currentPositionLabel = 'Current position: ';
-
-  /// Text used for the copy position (into clipboard) label.
   final String copyFenLabel = 'Copy position';
-
-  /// Text used for the paste position (from clipboard) label.
   final String pasteFenLabel = 'Paste position';
-
-  /// Text used for loading position that was first used when showing this widget button label.
   final String resetPosition = 'Reset position';
-
-  /// Text used for loading standard position button label.
   final String standardPosition = 'Standard position';
-
-  /// Text used for erasing position button label.
   final String erasePosition = 'Erase position';
 }
 
-/// Editable chess board widget.
 class EditableChessBoard extends StatefulWidget {
-  // Size of the board.
   final double boardSize;
-
   final String fen;
 
   final void Function(String newFen) onFenChanged;
 
-  /// Constructor.
   const EditableChessBoard({
     super.key,
     required this.boardSize,
@@ -72,6 +51,12 @@ class _EditableChessBoardState extends State<EditableChessBoard> {
 
   void _onSquareClicked(int file, int rank) {
     _updateFenPiece(file: file, rank: rank, pieceType: _editingPieceType);
+  }
+
+  void _onPiecedMoved(
+      int fromFile, int fromRank, int toFile, int toRank, Piece? piece) {
+    _updateFenPiece(file: fromFile, rank: fromRank, pieceType: null);
+    _updateFenPiece(file: toFile, rank: toRank, pieceType: piece);
   }
 
   void _updateFenPiece(
@@ -160,6 +145,7 @@ class _EditableChessBoardState extends State<EditableChessBoard> {
             child: ChessBoard(
               fen: _fen,
               onSquareClicked: _onSquareClicked,
+              onPieceMoved: _onPiecedMoved,
             ),
           ),
           WhitePieces(

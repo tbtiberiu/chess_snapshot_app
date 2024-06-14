@@ -1,3 +1,6 @@
+import 'package:chess_snapshot_chessboard/piece.dart';
+import 'package:chess_snapshot_chessboard/square.dart';
+import 'package:chess_vectors_flutter/chess_vectors_flutter.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
@@ -8,12 +11,15 @@ import 'ui_square.dart';
 class ChessBoard extends StatelessWidget {
   final String fen;
   final void Function(int file, int rank) onSquareClicked;
+  final void Function(
+          int fromFile, int fromRank, int toFile, int toRank, Piece? piece)
+      onPieceMoved;
 
-  const ChessBoard({
-    super.key,
-    required this.fen,
-    required this.onSquareClicked,
-  });
+  const ChessBoard(
+      {super.key,
+      required this.fen,
+      required this.onSquareClicked,
+      required this.onPieceMoved});
 
   Widget _buildPlayerTurn({required double size}) {
     final isWhiteTurn = fen.split(' ')[1] == 'w';
@@ -65,6 +71,7 @@ class ChessBoard extends StatelessWidget {
               fen: fen,
               size: boardSize,
               onSquareClicked: onSquareClicked,
+              onPieceMoved: onPieceMoved,
             ),
           ],
         );
@@ -76,11 +83,15 @@ class ChessBoard extends StatelessWidget {
 class _Chessboard extends StatefulWidget {
   final Board board;
   final void Function(int file, int rank) onSquareClicked;
+  final void Function(
+          int fromFile, int fromRank, int toFile, int toRank, Piece? piece)
+      onPieceMoved;
 
   _Chessboard({
     required String fen,
     required double size,
     required this.onSquareClicked,
+    required this.onPieceMoved,
     Color lightSquareColor = const Color.fromRGBO(240, 217, 181, 1),
     Color darkSquareColor = const Color.fromRGBO(181, 136, 99, 1),
     BuildPiece? buildPiece,
@@ -101,32 +112,99 @@ class _Chessboard extends StatefulWidget {
 }
 
 class _ChessboardState extends State<_Chessboard> {
+  Widget _buildPiece(Piece? piece, double size) {
+    if (piece == Piece.whiteRook) {
+      return WhiteRook(size: size);
+    } else if (piece == Piece.whiteKnight) {
+      return WhiteKnight(size: size);
+    } else if (piece == Piece.whiteBishop) {
+      return WhiteBishop(size: size);
+    } else if (piece == Piece.whiteKing) {
+      return WhiteKing(size: size);
+    } else if (piece == Piece.whiteQueen) {
+      return WhiteQueen(size: size);
+    } else if (piece == Piece.whitePawn) {
+      return WhitePawn(size: size);
+    } else if (piece == Piece.blackRook) {
+      return BlackRook(size: size);
+    } else if (piece == Piece.blackKnight) {
+      return BlackKnight(size: size);
+    } else if (piece == Piece.blackBishop) {
+      return BlackBishop(size: size);
+    } else if (piece == Piece.blackKing) {
+      return BlackKing(size: size);
+    } else if (piece == Piece.blackQueen) {
+      return BlackQueen(size: size);
+    } else if (piece == Piece.blackPawn) {
+      return BlackPawn(size: size);
+    } else {
+      return const SizedBox();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Provider.value(
       value: widget.board,
-      child: SizedBox(
-        width: widget.board.size,
-        height: widget.board.size,
-        child: Stack(
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: SizedBox(
+          width: widget.board.size,
+          height: widget.board.size,
+          child: Stack(
             alignment: AlignmentDirectional.topStart,
-            textDirection: TextDirection.ltr,
             children: [
               ...widget.board.squares.map((it) {
-                return UISquare(
-                  square: it,
-                  onSquareClicked: () {
-                    final fileStr = it.file;
-                    final rankStr = it.rank;
+                return Positioned(
+                  left: it.x,
+                  top: it.y,
+                  width: it.size,
+                  height: it.size,
+                  child: DragTarget<Square>(
+                    onAcceptWithDetails: (details) {
+                      final fromSquare = details.data;
+                      final fromFile =
+                          fromSquare.file.codeUnitAt(0) - 'a'.codeUnitAt(0);
+                      final fromRank =
+                          fromSquare.rank.codeUnitAt(0) - '1'.codeUnitAt(0);
+                      final toFile = it.file.codeUnitAt(0) - 'a'.codeUnitAt(0);
+                      final toRank = it.rank.codeUnitAt(0) - '1'.codeUnitAt(0);
+                      Piece? selectedPiece = fromSquare.piece.toNullable();
 
-                    final file = fileStr.codeUnitAt(0) - 'a'.codeUnitAt(0);
-                    final rank = rankStr.codeUnitAt(0) - '1'.codeUnitAt(0);
+                      if (selectedPiece == null) return;
+                      if (fromFile == toFile && fromRank == toRank) return;
 
-                    widget.onSquareClicked(file, rank);
-                  },
+                      widget.onPieceMoved(
+                          fromFile, fromRank, toFile, toRank, selectedPiece);
+                    },
+                    builder: (context, candidateData, rejectedData) {
+                      return InkWell(
+                          onTap: () {
+                            final file =
+                                it.file.codeUnitAt(0) - 'a'.codeUnitAt(0);
+                            final rank =
+                                it.rank.codeUnitAt(0) - '1'.codeUnitAt(0);
+
+                            widget.onSquareClicked(file, rank);
+                          },
+                          child: Draggable<Square>(
+                            data: it,
+                            feedback: Material(
+                              color: Colors.transparent,
+                              child:
+                                  _buildPiece(it.piece.toNullable(), it.size),
+                            ),
+                            child: UISquare(
+                              square: it,
+                            ),
+                          ));
+                    },
+                  ),
                 );
               }),
-            ]),
+            ],
+          ),
+        ),
       ),
     );
   }
